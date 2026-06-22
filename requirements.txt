@@ -7,4 +7,5 @@ pandas-ta
 scikit-learn
 scipy
 statsmodels
-numpy<=2.2
+numpy>=2.0,<2.3
+numba>=0.60.0
