@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 import streamlit as st
 from utils.model_train import get_data, get_rolling_mean, get_differencing_order, scaling, evaluate_model, get_best_arima_params, inverse_scaling, get_forecast
 import pandas as pd
