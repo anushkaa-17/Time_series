@@ -42,22 +42,20 @@ rolling_price = get_rolling_mean(close_price)
 differencing_order = get_differencing_order(rolling_price)
 scaled_data, scaler = scaling(rolling_price)
 
-# --- SINGLE OPTIMIZATION BLOCK ---
 with st.spinner("Optimizing ARIMA parameters and generating forecast..."):
-    # 1. Run optimization once
+
     best_p, best_q, scaled_rmse = get_best_arima_params(scaled_data, differencing_order)
     
-    # 2. Convert scaled RMSE to true raw dollar error metric
     # Multiplying by the scaler's scale factor converts standard deviation back to dollars
     true_dollar_rmse = round(scaled_rmse * scaler.scale_[0], 2)
     
-    # 3. Generate predictions directly using the optimal parameters found
+
     predictions_scaled = fit_model(scaled_data, best_p, differencing_order, best_q)
 
 st.success(f"Optimal parameters found: ARIMA({best_p}, {differencing_order}, {best_q})")
 st.write("**Model True RMSE Score:** $", true_dollar_rmse)
 
-# --- FORECAST DATAFRAME GENERATION ---
+
 start_date = datetime.now().strftime("%Y-%m-%d")
 end_date = (datetime.now() + timedelta(days=29)).strftime("%Y-%m-%d")
 forecast_index = pd.date_range(start=start_date, end=end_date, freq="D")
