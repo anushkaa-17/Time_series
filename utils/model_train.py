@@ -1,5 +1,5 @@
-import yfinance as yf
-from statsmodels.tsa.stattools import adfuller
+import sys
+from pathlib import Path
 import yfinance as yf
 from statsmodels.tsa.stattools import adfuller
 from sklearn.metrics import mean_squared_error, r2_score
@@ -35,6 +35,12 @@ def get_differencing_order(close_price):
     return d
 
 def fit_model(data, p, differencing_order, q):
+    # Enforce standard formatting for statsmodels array inputs
+    if isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
+        data = data.values.flatten()
+    elif isinstance(data, np.ndarray):
+        data = data.flatten()
+        
     model = ARIMA(data, order=(p, differencing_order, q))
     model_fit = model.fit()
 
@@ -49,7 +55,7 @@ def evaluate_model(original_price, p, differencing_order, q):
         train_data, test_data = original_price[:-30], original_price[-30:]
         predictions = fit_model(train_data, p, differencing_order, q)
         rmse = np.sqrt(mean_squared_error(test_data, predictions))
-        return round(rmse, 2)
+        return round(rmse, 4)
     except:
         return float("inf")
     
@@ -75,22 +81,6 @@ def scaling(close_price):
     scaler = StandardScaler()
     scaled_data = scaler.fit_transform(np.array(close_price).reshape(-1, 1))
     return scaled_data, scaler
-
-# --- UPDATED FUNCTION ---
-def get_forecast(original_price, differencing_order):
-    # 1. Find the best p and q parameters first
-    best_p, best_q, _ = get_best_arima_params(original_price, differencing_order)
-    
-    # 2. Pass those optimized values into your updated fit_model signature
-    predictions = fit_model(original_price, best_p, differencing_order, best_q)
-    
-    start_date = datetime.now().strftime("%Y-%m-%d")
-    end_date = (datetime.now() + timedelta(days=29)).strftime("%Y-%m-%d")
-    forecast_index = pd.date_range(start=start_date, end=end_date, freq="D")
-    forecast_df = pd.DataFrame(
-        predictions, index=forecast_index, columns=["Close"]
-    )
-    return forecast_df
 
 def inverse_scaling(scaler, scaled_data):
     close_price = scaler.inverse_transform(
